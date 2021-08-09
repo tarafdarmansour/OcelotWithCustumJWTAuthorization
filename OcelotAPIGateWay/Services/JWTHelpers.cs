@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace OcelotAPIGateWay.Services
@@ -27,14 +28,14 @@ namespace OcelotAPIGateWay.Services
                 if (jwtToken == null)
                     return null;
 
-                var symmetricKey = Convert.FromBase64String(_configuration.GetValue<string>("Secret"));
 
                 var validationParameters = new TokenValidationParameters()
                 {
                     RequireExpirationTime = true,
                     ValidateIssuer = false,
                     ValidateAudience = false,
-                    IssuerSigningKey = new SymmetricSecurityKey(symmetricKey)
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                             Encoding.ASCII.GetBytes(_configuration.GetSection("SecretKey").Value))
                 };
 
                 SecurityToken securityToken;
@@ -42,32 +43,32 @@ namespace OcelotAPIGateWay.Services
 
                 return principal;
             }
-            catch (Exception)
+            catch (Exception exp)
             {
                 //should write log
                 return null;
             }
         }
 
-        public string GetUserNameFromToken(string token)
+        public bool TokenIsValid(string token, out string username)
         {
-            string username= null;
+            username= null;
 
             var simplePrinciple = GetPrincipal(token);
             var identity = simplePrinciple.Identity as ClaimsIdentity;
 
             if (identity == null || !identity.IsAuthenticated)
-                return null;
+                return false;
 
             var usernameClaim = identity.FindFirst(ClaimTypes.Name);
             username = usernameClaim?.Value;
 
             if (string.IsNullOrEmpty(username))
-                return null;
+                return false;
 
             // More validate to check whether username exists in system
 
-            return username;
+            return true;
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using AuthenticationService.Services;
+﻿using AuthenticationService.Models;
+using AuthenticationService.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -27,6 +28,12 @@ namespace AuthenticationService.Controllers
         public string GetToken(User user)
         {
             return _jwtService.GenerateToken(user);
+        }
+
+        [HttpPost]
+        public bool AuthorizeRequest(AuthorizeRequest request)
+        {
+            return true;
         }
     }
 }

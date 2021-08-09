@@ -1,20 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 
 namespace OcelotAPIGateWay
 {
     using Microsoft.AspNetCore.Authentication.JwtBearer;
+    using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Hosting;
     using Microsoft.IdentityModel.Tokens;
     using OcelotAPIGateWay.Dependency;
@@ -63,9 +58,10 @@ namespace OcelotAPIGateWay
 
              });
 
+            services.AddHttpClient<IAuthorizationService, AuthorizationService>();
 
             services.AddScoped<IJWTHelpers, JWTHelpers>();
-            services.AddScoped<IAuthorizationService, AuthorizationService>();
+            
 
             services.AddOcelot();
 
@@ -84,56 +80,21 @@ namespace OcelotAPIGateWay
 
             var configuration = new OcelotPipelineConfiguration
             {
-                //PreErrorResponderMiddleware = async (ctx, next) =>
-                //{
-                //    _logger.LogInformation("PreErrorResponderMiddleware Before");
-                //    await next.Invoke();
-                //    _logger.LogInformation("PreErrorResponderMiddleware After");
-                //},
-                //AuthenticationMiddleware = async (ctx, next) =>
-                //{
-                //    _logger.LogInformation("AuthenticationMiddleware Before");
-                //    await next.Invoke();
-                //    _logger.LogInformation("AuthenticationMiddleware After");
-                //},
+                AuthorizationMiddleware = async (ctx, next) =>
+                {
 
-                //AuthorizationMiddleware = async (ctx, next) =>
-                //{
+                    if (! await authorizationService.IsValid(ctx))
+                    {
+                        ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                        await ctx.Response.WriteAsync("Some Error !");
+                    }
+                    else
+                    {
+                        await next.Invoke();
 
-                //    if (!authorizationService.Validate(ctx))
-                //    {
-                //        ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                //        byte[] data = System.Text.Encoding.UTF8.GetBytes("error");
-                //        await ctx.Response.Body.WriteAsync(data, 0, data.Length);
-                //    }
-                //    else
-                //    {
-                //        await next.Invoke();
-
-                //    }
-                //},
-
-                //PreAuthenticationMiddleware = async (ctx, next) =>
-                //{
-                //    _logger.LogInformation("PreAuthenticationMiddleware Before");
-                //    await next.Invoke();
-                //    _logger.LogInformation("PreAuthenticationMiddleware After");
-                //},
-                //PreAuthorizationMiddleware = async (ctx, next) =>
-                //{
-                //    _logger.LogInformation("PreAuthorizationMiddleware Before");
-                //    await next.Invoke();
-                //    _logger.LogInformation("PreAuthorizationMiddleware After");
-                //},
-                // PreQueryStringBuilderMiddleware = async (ctx, next) =>
-                //{
-                //    _logger.LogInformation("PreQueryStringBuilderMiddleware Before");
-                //    await next.Invoke();
-                //    _logger.LogInformation("PreQueryStringBuilderMiddleware After");
-                //},
-
+                    }
+                },
             };
-
 
             app.UseOcelot(configuration).Wait();
         }

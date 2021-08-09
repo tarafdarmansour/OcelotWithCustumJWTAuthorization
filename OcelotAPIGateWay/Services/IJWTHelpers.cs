@@ -5,6 +5,6 @@ namespace OcelotAPIGateWay.Services
     public interface IJWTHelpers
     {
         ClaimsPrincipal GetPrincipal(string token);
-        string GetUserNameFromToken(string token);
+        bool TokenIsValid(string token, out string username);
     }
 }

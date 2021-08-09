@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
 
 namespace OcelotAPIGateWay.Services
 {
     public interface IAuthorizationService
     {
-        bool Validate(HttpContext context);
+        Task<bool> IsValid(HttpContext context);
     }
 }
