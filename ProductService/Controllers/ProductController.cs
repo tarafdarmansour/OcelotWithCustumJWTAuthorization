@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 
 namespace ProductService.Controllers
 {
@@ -24,18 +26,20 @@ namespace ProductService.Controllers
         private readonly List<Product> _products;
 
         private readonly ILogger<ProductController> _logger;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ProductController(ILogger<ProductController> logger)
+        public ProductController(ILogger<ProductController> logger, IHttpContextAccessor httpContextAccessor)
         {
             _logger = logger;
-                var rng = new Random();
+            _httpContextAccessor = httpContextAccessor;
+            var rng = new Random();
             int productCount = _productSampleList.Count();
             int brandCount = _brandsSampleList.Count();
-            _products=  Enumerable.Range(1, productCount).Select(index => new Product
+            _products = Enumerable.Range(1, productCount).Select(index => new Product
             {
                 Id = index,
                 Brand = _brandsSampleList[rng.Next(brandCount)],
-                DiscountRate = rng.Next(5,brandCount),
+                DiscountRate = rng.Next(5, brandCount),
                 Name = _productSampleList[rng.Next(productCount)]
             })
             .ToList();
@@ -44,13 +48,26 @@ namespace ProductService.Controllers
         [HttpGet]
         public IEnumerable<Product> Products()
         {
-            return _products;
+            StringValues username;
+
+            _httpContextAccessor.HttpContext.Request.Headers.TryGetValue("username", out username);
+
+            var token = _httpContextAccessor.HttpContext.Request.Headers["Authorization"];
+
+            var keys = _httpContextAccessor.HttpContext.Request.Headers.Keys;
+
+            if (username.FirstOrDefault() != null)
+                return _products;
+
+            return new List<Product>();
         }
 
         [HttpGet("{id}")]
         public Product Product(int id)
         {
+
             return _products.Where(p => p.Id == id).FirstOrDefault();
+
         }
     }
 }

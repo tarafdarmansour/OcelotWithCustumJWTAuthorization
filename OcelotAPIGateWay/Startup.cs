@@ -12,6 +12,7 @@ namespace OcelotAPIGateWay
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Hosting;
     using Microsoft.IdentityModel.Tokens;
+    using OcelotAPIGateWay.DelegateHandler;
     using OcelotAPIGateWay.Dependency;
     using OcelotAPIGateWay.Services;
     using System.Net;
@@ -63,7 +64,9 @@ namespace OcelotAPIGateWay
             services.AddScoped<IJWTHelpers, JWTHelpers>();
             
 
-            services.AddOcelot();
+            services
+                .AddOcelot()
+                .AddDelegatingHandler<HeaderDelegatingHandler>();
 
             services.AddMvc();
         }

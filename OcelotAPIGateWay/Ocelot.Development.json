@@ -74,10 +74,14 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "AuthenticationKey",
         "AllowedScopes": []
-      }
+      },
+      "DelegatingHandlers": [
+        "HeaderDelegatingHandler"
+      ]
     }
   ],
   "GlobalConfiguration": {
     "BaseUrl": "https://localhost:5000"
+
   }
 }  
